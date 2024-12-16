@@ -2,11 +2,7 @@ package main
 
 import (
 	"fmt"
-	"mime"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 )
 
 type Compression struct {
@@ -39,61 +35,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	filename := os.Args[1]
-	flag := detectCompressionFlag(filename)
+	// Initialize dependencies
+	fs := &DefaultFileSystem{}
+	commander := &DefaultCommander{}
+	detector := NewDefaultCompressionDetector(compressionTypes)
 
-	if flag == "" {
-		fmt.Printf("Unsupported file format: %s\n", filename)
+	// Get current working directory
+	workingDir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error getting working directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	cmd := buildTarCommand(flag, filename)
-	fmt.Printf("Executing: %s\n", cmd)
+	// Create archive handler
+	handler := NewArchiveHandler(fs, commander, detector, workingDir)
 
-	if err := executeCommand(cmd); err != nil {
-		fmt.Printf("Error executing command: %v\n", err)
+	// Process the archive
+	if err := handler.Process(os.Args[1]); err != nil {
+		fmt.Printf("Error processing archive: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-// Searches for a compression flag based on the file extension
-func findFlagByExtension(ext string) string {
-	ext = strings.ToLower(ext)
-	for _, c := range compressionTypes {
-		if containsString(c.Extensions, ext) {
-			return c.Flag
-		}
-	}
-	return ""
-}
-
-// Searches for a compression flag based on the MIME type
-func findFlagByMimeType(mimeType string) string {
-	if mimeType == "" {
-		return ""
-	}
-
-	for _, c := range compressionTypes {
-		if containsString(c.MimeTypes, mimeType) {
-			return c.Flag
-		}
-	}
-	return ""
-}
-
-// Processes special file extensions that need specific handling
-func handleSpecialCases(ext string) string {
-	switch ext {
-	case ".tgz":
-		return "z"
-	case ".tbz2":
-		return "j"
-	default:
-		return ""
-	}
-}
-
-// Checks if a string slice contains a specific target string
 func containsString(slice []string, target string) bool {
 	for _, s := range slice {
 		if s == target {
@@ -101,33 +64,4 @@ func containsString(slice []string, target string) bool {
 		}
 	}
 	return false
-}
-
-// Determines the appropriate compression flag for the given filename
-func detectCompressionFlag(filename string) string {
-	ext := strings.ToLower(filepath.Ext(filename))
-
-	// Check special cases first
-	if flag := handleSpecialCases(ext); flag != "" {
-		return flag
-	}
-
-	// Try extension-based detection
-	if flag := findFlagByExtension(ext); flag != "" {
-		return flag
-	}
-
-	// Try MIME type-based detection
-	mimeType := mime.TypeByExtension(ext)
-	return findFlagByMimeType(mimeType)
-}
-
-// Constructs the tar command string with the appropriate flag
-func buildTarCommand(flag, filename string) string {
-	return fmt.Sprintf("tar xf%s %s", flag, filename)
-}
-
-// Runs the shell command and returns any error that occurred
-func executeCommand(cmd string) error {
-	return exec.Command("sh", "-c", cmd).Run()
 }
