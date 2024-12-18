@@ -63,6 +63,14 @@ func TestDetermineOperation(t *testing.T) {
 			want:        Unknown,
 			wantErr:     true,
 		},
+		{
+			name:        "Both archive and directory exist - should error",
+			archivePath: "test.tar.gz",
+			fileExists:  true,
+			dirExists:   true,
+			want:        Unknown,
+			wantErr:     true,
+		},
 	}
 
 	for _, tt := range tests {

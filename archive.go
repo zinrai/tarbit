@@ -49,20 +49,24 @@ func (h *ArchiveHandler) Process(archivePath string) error {
 
 // Decides whether to extract or compress based on filesystem state
 func (h *ArchiveHandler) determineOperation(archivePath string) (Operation, error) {
-	exists, err := h.fs.FileExists(archivePath)
+	dirPath := h.getDirectoryPath(archivePath)
+
+	fileExists, err := h.fs.FileExists(archivePath)
 	if err != nil {
 		return Unknown, err
 	}
 
-	if exists {
-		return Extract, nil
-	}
-
-	// Check if a directory exists for compression
-	dirPath := h.getDirectoryPath(archivePath)
 	dirExists, err := h.fs.DirExists(dirPath)
 	if err != nil {
 		return Unknown, err
+	}
+
+	if fileExists && dirExists {
+		return Unknown, fmt.Errorf("both archive and directory exist: %s, %s", archivePath, dirPath)
+	}
+
+	if fileExists {
+		return Extract, nil
 	}
 
 	if dirExists {
