@@ -94,9 +94,9 @@ func (h *ArchiveHandler) extract(archivePath string) error {
 		return fmt.Errorf("failed to create target directory: %w", err)
 	}
 
-	cmd := fmt.Sprintf("cd %s && tar xf%s %s", targetDir, flag, absArchivePath)
-	fmt.Printf("Command: %s\n", cmd)
-	if err := h.commander.Execute(cmd); err != nil {
+	tarFlag := "xf" + flag
+	fmt.Printf("Command: (cd %s && tar %s %s)\n", targetDir, tarFlag, absArchivePath)
+	if err := h.commander.Execute(targetDir, "tar", tarFlag, absArchivePath); err != nil {
 		return fmt.Errorf("extraction failed: %w", err)
 	}
 
@@ -111,9 +111,10 @@ func (h *ArchiveHandler) compress(archivePath string) error {
 	}
 
 	dirPath := h.getDirectoryPath(archivePath)
-	cmd := fmt.Sprintf("tar cf%s %s %s", flag, archivePath, filepath.Base(dirPath))
-	fmt.Printf("Command: %s\n", cmd)
-	if err := h.commander.Execute(cmd); err != nil {
+	tarFlag := "cf" + flag
+	baseName := filepath.Base(dirPath)
+	fmt.Printf("Command: (cd %s && tar %s %s %s)\n", h.workingDir, tarFlag, archivePath, baseName)
+	if err := h.commander.Execute(h.workingDir, "tar", tarFlag, archivePath, baseName); err != nil {
 		return fmt.Errorf("compression failed: %w", err)
 	}
 

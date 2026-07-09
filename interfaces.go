@@ -15,7 +15,7 @@ type FileSystem interface {
 }
 
 type Commander interface {
-	Execute(cmd string) error
+	Execute(dir, name string, args ...string) error
 }
 
 type CompressionDetector interface {
@@ -52,8 +52,12 @@ func (fs *DefaultFileSystem) MkdirAll(path string, perm os.FileMode) error {
 
 type DefaultCommander struct{}
 
-func (c *DefaultCommander) Execute(cmd string) error {
-	return exec.Command("sh", "-c", cmd).Run()
+func (c *DefaultCommander) Execute(dir, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 type DefaultCompressionDetector struct {
