@@ -5,6 +5,12 @@ import (
 	"os"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 type Compression struct {
 	Flag       string
 	MimeTypes  []string
@@ -31,6 +37,7 @@ var compressionTypes = []Compression{
 
 func main() {
 	if len(os.Args) < 2 {
+		fmt.Printf("tarbit %s (commit %s, built %s)\n", version, commit, date)
 		fmt.Println("Usage: tarbit <filename>")
 		os.Exit(1)
 	}
