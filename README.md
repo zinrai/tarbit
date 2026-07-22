@@ -21,14 +21,6 @@ I made this because I can't remember the options for compressing and decompressi
 
 `tar` command with gzip, bzip2, and xz support.
 
-## Installation
-
-build from source:
-
-```bash
-$ go build
-```
-
 ## Usage
 
 ### Extract an archive
